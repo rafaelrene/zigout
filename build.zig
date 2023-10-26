@@ -24,10 +24,10 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    exe.addIncludePath(std.build.LazyPath{ .path = "./include/" });
-    exe.addLibraryPath(std.build.LazyPath{ .path = "./lib/" });
+    exe.addIncludePath(std.build.LazyPath{ .path = "/opt/homebrew/include/" });
+    exe.addLibraryPath(std.build.LazyPath{ .path = "/opt/homebrew/lib/" });
     exe.linkLibC();
-    exe.linkSystemLibrary("sdl2");
+    exe.linkSystemLibrary("SDL2");
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
