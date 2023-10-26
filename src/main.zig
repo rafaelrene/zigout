@@ -6,8 +6,8 @@ const std = @import("std");
 
 const print = std.debug.print;
 
-const WIDTH: u32 = 1280;
-const HEIGHT: u32 = 800;
+const WIDTH: i32 = 1280;
+const HEIGHT: i32 = 800;
 
 const SDLError = error{
     FailedInit,
@@ -36,6 +36,24 @@ const Paddle = struct {
 
         return is_x_overlapping and is_y_overlapping;
     }
+
+    pub fn update_position(self: *Paddle, x: i32) void {
+        if (x > WIDTH) {
+            self.x = WIDTH - self.width;
+        }
+
+        if (x < 0) {
+            self.x = 0;
+        }
+
+        self.x += x;
+
+        print("Stuff", .{});
+    }
+
+    pub fn to_rect(self: Paddle) c.SDL_Rect {
+        return c.SDL_Rect{ .w = self.width, .h = self.height, .x = self.x, .y = self.y };
+    }
 };
 
 const Brick = struct {
@@ -60,33 +78,12 @@ fn is_quit(event: *c.SDL_Event) bool {
     };
 }
 
-fn handle_event_loop() !void {
-    var event: c.SDL_Event = undefined;
-
-    while (true) {
-        if (c.SDL_WaitEvent(&event) == 0) {
-            print(
-                "Getting next event failed: {s}\n",
-                .{c.SDL_GetError()},
-            );
-
-            return SDLError.FailedGettingEvent;
-        }
-
-        if (is_quit(&event)) {
-            break;
-        }
-    }
-}
-
-fn draw_paddle(renderer: *c.SDL_Renderer) Paddle {
-    const paddle = Paddle{};
-    const rect = c.SDL_Rect{ .w = paddle.width, .h = paddle.height, .x = paddle.x, .y = paddle.y };
-
-    _ = c.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    _ = c.SDL_RenderFillRect(renderer, rect);
-
-    return paddle;
+fn handle_paddle_events(event: *c.SDL_Event, paddle: *Paddle) void {
+    _ = switch (event.type) {
+        c.SDLK_LEFT => paddle.update_position(-1),
+        c.SDL_SCANCODE_A => paddle.update_position(-1),
+        else => null,
+    };
 }
 
 pub fn main() !void {
@@ -111,16 +108,33 @@ pub fn main() !void {
 
     c.SDL_PumpEvents();
 
-    _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    _ = c.SDL_RenderClear(renderer);
+    var event: c.SDL_Event = undefined;
 
-    const paddle = Paddle{};
-    const rect = c.SDL_Rect{ .w = paddle.width, .h = paddle.height, .x = paddle.x, .y = paddle.y };
+    while (true) {
+        if (c.SDL_WaitEvent(&event) == 0) {
+            print(
+                "Getting next event failed: {s}\n",
+                .{c.SDL_GetError()},
+            );
 
-    _ = c.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    _ = c.SDL_RenderFillRect(renderer, &rect);
+            return SDLError.FailedGettingEvent;
+        }
 
-    c.SDL_RenderPresent(renderer);
+        if (is_quit(&event)) {
+            break;
+        }
 
-    try handle_event_loop();
+        var paddle = Paddle{};
+
+        handle_paddle_events(&event, &paddle);
+
+        _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        _ = c.SDL_RenderClear(renderer);
+
+        _ = c.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        _ = c.SDL_RenderFillRect(renderer, &paddle.to_rect());
+
+        c.SDL_RenderPresent(renderer);
+        c.SDL_Delay(1000 / 60);
+    }
 }
