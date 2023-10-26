@@ -6,8 +6,8 @@ const std = @import("std");
 
 const print = std.debug.print;
 
-const WIDTH: u32 = 1280;
-const HEIGHT: u32 = 800;
+const WIDTH: i32 = 1280;
+const HEIGHT: i32 = 800;
 
 const SDLError = error{
     FailedInit,
@@ -25,16 +25,35 @@ const Ball = struct {
 };
 
 const Paddle = struct {
-    width: i32 = 50,
+    width: i32 = 100,
     height: i32 = 10,
-    x: i32 = WIDTH / 2 - 25,
+    x: i32 = WIDTH / 2 - 50,
     y: i32 = HEIGHT - 20,
+    speed: i32 = 20,
 
     pub fn is_colliding(self: Paddle, ball: Ball) bool {
         const is_x_overlapping = self.x < ball.x and self.x + self.width > ball.x;
         const is_y_overlapping = self.y < ball.y and self.y + self.height > ball.y;
 
         return is_x_overlapping and is_y_overlapping;
+    }
+
+    pub fn update_position(self: *Paddle, delta_x: i32) void {
+        if (self.x + self.width + delta_x > WIDTH) {
+            self.x = WIDTH - self.width;
+            return;
+        }
+
+        if (self.x + delta_x < 0) {
+            self.x = 0;
+            return;
+        }
+
+        self.x += delta_x;
+    }
+
+    pub fn to_rect(self: Paddle) c.SDL_Rect {
+        return c.SDL_Rect{ .w = self.width, .h = self.height, .x = self.x, .y = self.y };
     }
 };
 
@@ -60,33 +79,18 @@ fn is_quit(event: *c.SDL_Event) bool {
     };
 }
 
-fn handle_event_loop() !void {
-    var event: c.SDL_Event = undefined;
-
-    while (true) {
-        if (c.SDL_WaitEvent(&event) == 0) {
-            print(
-                "Getting next event failed: {s}\n",
-                .{c.SDL_GetError()},
-            );
-
-            return SDLError.FailedGettingEvent;
-        }
-
-        if (is_quit(&event)) {
-            break;
-        }
+fn handle_paddle_events(keyboard: [*c]const u8, paddle: *Paddle) void {
+    if (keyboard[c.SDL_SCANCODE_A] != 0) {
+        paddle.update_position(-paddle.speed);
+        print("Paddle after: {any}\n", .{paddle});
+        return;
     }
-}
 
-fn draw_paddle(renderer: *c.SDL_Renderer) Paddle {
-    const paddle = Paddle{};
-    const rect = c.SDL_Rect{ .w = paddle.width, .h = paddle.height, .x = paddle.x, .y = paddle.y };
-
-    _ = c.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    _ = c.SDL_RenderFillRect(renderer, rect);
-
-    return paddle;
+    if (keyboard[c.SDL_SCANCODE_D] != 0) {
+        paddle.update_position(paddle.speed);
+        print("Paddle after: {any}\n", .{paddle});
+        return;
+    }
 }
 
 pub fn main() !void {
@@ -111,16 +115,35 @@ pub fn main() !void {
 
     c.SDL_PumpEvents();
 
-    _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    _ = c.SDL_RenderClear(renderer);
+    const keyboard = c.SDL_GetKeyboardState(null);
 
-    const paddle = Paddle{};
-    const rect = c.SDL_Rect{ .w = paddle.width, .h = paddle.height, .x = paddle.x, .y = paddle.y };
+    var event: c.SDL_Event = undefined;
 
-    _ = c.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    _ = c.SDL_RenderFillRect(renderer, &rect);
+    var paddle = Paddle{};
 
-    c.SDL_RenderPresent(renderer);
+    while (true) {
+        if (c.SDL_WaitEvent(&event) == 0) {
+            print(
+                "Getting next event failed: {s}\n",
+                .{c.SDL_GetError()},
+            );
 
-    try handle_event_loop();
+            return SDLError.FailedGettingEvent;
+        }
+
+        if (is_quit(&event)) {
+            break;
+        }
+
+        handle_paddle_events(keyboard, &paddle);
+
+        _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        _ = c.SDL_RenderClear(renderer);
+
+        _ = c.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        _ = c.SDL_RenderFillRect(renderer, &paddle.to_rect());
+
+        c.SDL_RenderPresent(renderer);
+        c.SDL_Delay(1000 / 60);
+    }
 }
