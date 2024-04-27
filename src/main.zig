@@ -77,7 +77,7 @@ fn is_quit(event: *c.SDL_Event) bool {
     };
 }
 
-fn handle_paddle_events(keyboard: [*c]const u8, paddle: *Paddle) void {
+fn handle_paddle_keyboard_events(keyboard: [*c]const u8, paddle: *Paddle) void {
     if (keyboard[c.SDL_SCANCODE_A] != 0) {
         paddle.update_position(-paddle.speed);
         print("Paddle after: {any}\n", .{paddle});
@@ -135,7 +135,7 @@ pub fn main() !void {
             break;
         }
 
-        handle_paddle_events(keyboard, &paddle);
+        handle_paddle_keyboard_events(keyboard, &paddle);
 
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         _ = c.SDL_RenderClear(renderer);
