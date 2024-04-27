@@ -23,10 +23,10 @@ const Ball = struct {
 };
 
 const Paddle = struct {
-    width: i32 = 100,
-    height: i32 = 10,
+    width: i32 = 200,
+    height: i32 = 20,
     x: i32 = WIDTH / 2 - 50,
-    y: i32 = HEIGHT - 20,
+    y: i32 = HEIGHT - 30,
     speed: i32 = 20,
 
     pub fn is_colliding(self: Paddle, ball: Ball) bool {
