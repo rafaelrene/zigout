@@ -13,8 +13,6 @@ const SDLError = error{
     FailedInit,
     FailedCreatingWindow,
     FailedGettingEvent,
-    FailedDraw,
-    FailedScreenUpdate,
 };
 
 const Ball = struct {
@@ -95,10 +93,11 @@ fn handle_paddle_events(keyboard: [*c]const u8, paddle: *Paddle) void {
 
 pub fn main() !void {
     const init = c.SDL_Init(c.SDL_INIT_VIDEO);
-    errdefer c.SDL_Quit();
+    defer c.SDL_Quit();
 
     if (init < 0) {
         print("SDL Init failed: {s}", .{c.SDL_GetError()});
+        return SDLError.FailedInit;
     }
 
     const window = c.SDL_CreateWindow("Zigout", c.SDL_WINDOWPOS_CENTERED, c.SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, c.SDL_WINDOW_SHOWN);
@@ -106,6 +105,7 @@ pub fn main() !void {
 
     if (window == null) {
         print("SLD Create window failed: {s}", .{c.SDL_GetError()});
+        return SDLError.FailedCreatingWindow;
     }
 
     _ = c.SDL_UpdateWindowSurface(window);
