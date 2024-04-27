@@ -13,8 +13,6 @@ const SDLError = error{
     FailedInit,
     FailedCreatingWindow,
     FailedGettingEvent,
-    FailedDraw,
-    FailedScreenUpdate,
 };
 
 const Ball = struct {
@@ -25,10 +23,10 @@ const Ball = struct {
 };
 
 const Paddle = struct {
-    width: i32 = 100,
-    height: i32 = 10,
+    width: i32 = 200,
+    height: i32 = 20,
     x: i32 = WIDTH / 2 - 50,
-    y: i32 = HEIGHT - 20,
+    y: i32 = HEIGHT - 30,
     speed: i32 = 20,
 
     pub fn is_colliding(self: Paddle, ball: Ball) bool {
@@ -79,7 +77,7 @@ fn is_quit(event: *c.SDL_Event) bool {
     };
 }
 
-fn handle_paddle_events(keyboard: [*c]const u8, paddle: *Paddle) void {
+fn handle_paddle_keyboard_events(keyboard: [*c]const u8, paddle: *Paddle) void {
     if (keyboard[c.SDL_SCANCODE_A] != 0) {
         paddle.update_position(-paddle.speed);
         print("Paddle after: {any}\n", .{paddle});
@@ -95,10 +93,11 @@ fn handle_paddle_events(keyboard: [*c]const u8, paddle: *Paddle) void {
 
 pub fn main() !void {
     const init = c.SDL_Init(c.SDL_INIT_VIDEO);
-    errdefer c.SDL_Quit();
+    defer c.SDL_Quit();
 
     if (init < 0) {
         print("SDL Init failed: {s}", .{c.SDL_GetError()});
+        return SDLError.FailedInit;
     }
 
     const window = c.SDL_CreateWindow("Zigout", c.SDL_WINDOWPOS_CENTERED, c.SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, c.SDL_WINDOW_SHOWN);
@@ -106,6 +105,7 @@ pub fn main() !void {
 
     if (window == null) {
         print("SLD Create window failed: {s}", .{c.SDL_GetError()});
+        return SDLError.FailedCreatingWindow;
     }
 
     _ = c.SDL_UpdateWindowSurface(window);
@@ -135,7 +135,7 @@ pub fn main() !void {
             break;
         }
 
-        handle_paddle_events(keyboard, &paddle);
+        handle_paddle_keyboard_events(keyboard, &paddle);
 
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         _ = c.SDL_RenderClear(renderer);

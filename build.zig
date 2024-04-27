@@ -24,8 +24,8 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    exe.addIncludePath(std.build.LazyPath{ .path = "/opt/homebrew/include/" });
-    exe.addLibraryPath(std.build.LazyPath{ .path = "/opt/homebrew/lib/" });
+    exe.addIncludePath(std.Build.LazyPath{ .path = "/opt/homebrew/include/" });
+    exe.addLibraryPath(std.Build.LazyPath{ .path = "/opt/homebrew/lib/" });
     exe.linkLibC();
     exe.linkSystemLibrary("SDL2");
 
