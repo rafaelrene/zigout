@@ -16,10 +16,13 @@ const SDLError = error{
 };
 
 const Ball = struct {
-    width: i32,
-    height: i32,
-    x: i32,
-    y: i32,
+    radius: i32 = 10,
+    x: i32 = WIDTH / 2 + 5,
+    y: i32 = HEIGHT / 2 + 5,
+
+    pub fn to_rect(self: Ball) c.SDL_Rect {
+        return c.SDL_Rect{ .w = self.radius, .h = self.radius, .x = self.x, .y = self.y };
+    }
 };
 
 const Paddle = struct {
@@ -120,6 +123,7 @@ pub fn main() !void {
     var event: c.SDL_Event = undefined;
 
     var paddle = Paddle{};
+    var ball = Ball{};
 
     while (true) {
         if (c.SDL_WaitEvent(&event) == 0) {
@@ -140,8 +144,13 @@ pub fn main() !void {
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         _ = c.SDL_RenderClear(renderer);
 
+        // NOTE: Draw paddle
         _ = c.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         _ = c.SDL_RenderFillRect(renderer, &paddle.to_rect());
+
+        // NOTE: Draw ball
+        _ = c.SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        _ = c.SDL_RenderFillRect(renderer, &ball.to_rect());
 
         c.SDL_RenderPresent(renderer);
         c.SDL_Delay(1000 / 60);
