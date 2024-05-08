@@ -15,10 +15,21 @@ const SDLError = error{
     FailedGettingEvent,
 };
 
+const GameError = error{
+    BallOutOfBounds,
+};
+
 const Ball = struct {
     radius: i32 = 10,
     x: i32 = WIDTH / 2 + 5,
     y: i32 = HEIGHT / 2 + 5,
+    dx: i32 = 5,
+    dy: i32 = 5,
+
+    pub fn update_position(self: *Ball) void {
+        self.x += self.dx;
+        self.y += self.dy;
+    }
 
     pub fn to_rect(self: Ball) c.SDL_Rect {
         return c.SDL_Rect{ .w = self.radius, .h = self.radius, .x = self.x, .y = self.y };
@@ -32,9 +43,9 @@ const Paddle = struct {
     y: i32 = HEIGHT - 30,
     speed: i32 = 20,
 
-    pub fn is_colliding(self: Paddle, ball: Ball) bool {
-        const is_x_overlapping = self.x < ball.x and self.x + self.width > ball.x;
-        const is_y_overlapping = self.y < ball.y and self.y + self.height > ball.y;
+    pub fn is_colliding(self: Paddle, ball: *Ball) bool {
+        const is_x_overlapping = self.x < ball.x - ball.radius and self.x + self.width > ball.x + ball.radius;
+        const is_y_overlapping = self.y < ball.y + ball.radius and self.y + self.height > ball.y - ball.radius;
 
         return is_x_overlapping and is_y_overlapping;
     }
@@ -94,6 +105,31 @@ fn handle_paddle_keyboard_events(keyboard: [*c]const u8, paddle: *Paddle) void {
     }
 }
 
+fn handle_ball_bounce(paddle: *Paddle, ball: *Ball) GameError!void {
+    if (ball.x + ball.radius >= WIDTH) {
+        ball.dx = -5;
+    }
+
+    if (ball.x - ball.radius <= 0) {
+        ball.dx = 5;
+    }
+
+    if (ball.y - ball.radius <= 0) {
+        ball.dy = 5;
+    }
+
+    if (paddle.is_colliding(ball)) {
+        ball.dy = -5;
+    }
+
+    if (ball.y + ball.radius >= HEIGHT) {
+        print("GAME OVER!", .{});
+        return GameError.BallOutOfBounds;
+    }
+
+    ball.update_position();
+}
+
 pub fn main() !void {
     const init = c.SDL_Init(c.SDL_INIT_VIDEO);
     defer c.SDL_Quit();
@@ -140,6 +176,10 @@ pub fn main() !void {
         }
 
         handle_paddle_keyboard_events(keyboard, &paddle);
+
+        _ = handle_ball_bounce(&paddle, &ball) catch |err| switch (err) {
+            GameError.BallOutOfBounds => break,
+        };
 
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         _ = c.SDL_RenderClear(renderer);
