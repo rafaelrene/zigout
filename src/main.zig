@@ -162,14 +162,7 @@ pub fn main() !void {
     var ball = Ball{};
 
     while (true) {
-        if (c.SDL_WaitEvent(&event) == 0) {
-            print(
-                "Getting next event failed: {s}\n",
-                .{c.SDL_GetError()},
-            );
-
-            return SDLError.FailedGettingEvent;
-        }
+        _ = c.SDL_PollEvent(&event);
 
         if (is_quit(&event)) {
             break;
