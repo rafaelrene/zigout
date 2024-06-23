@@ -143,7 +143,7 @@ pub fn main() !void {
     defer c.SDL_DestroyWindow(window);
 
     if (window == null) {
-        print("SLD Create window failed: {s}", .{c.SDL_GetError()});
+        print("SDL Create window failed: {s}", .{c.SDL_GetError()});
         return SDLError.FailedCreatingWindow;
     }
 
