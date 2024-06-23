@@ -44,8 +44,11 @@ const Paddle = struct {
     speed: i32 = 20,
 
     pub fn is_colliding(self: Paddle, ball: *Ball) bool {
-        const is_x_overlapping = self.x < ball.x - ball.radius and self.x + self.width > ball.x + ball.radius;
-        const is_y_overlapping = self.y < ball.y + ball.radius and self.y + self.height > ball.y - ball.radius;
+        // TODO: Double check if this is correct!
+        // (https://github.com/rafaelrene/zigout/issues/17) TODO: Update to correctly calculate reflection
+        // (https://github.com/rafaelrene/zigout/issues/16) TODO: Move to ball
+        const is_x_overlapping = self.x <= ball.x and self.x + self.width >= ball.x + ball.radius;
+        const is_y_overlapping = self.y <= ball.y + ball.radius and self.y + self.height >= ball.y;
 
         return is_x_overlapping and is_y_overlapping;
     }
