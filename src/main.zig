@@ -47,7 +47,7 @@ const Paddle = struct {
         // TODO: Double check if this is correct!
         // (https://github.com/rafaelrene/zigout/issues/17) TODO: Update to correctly calculate reflection
         // (https://github.com/rafaelrene/zigout/issues/16) TODO: Move to ball
-        const is_x_overlapping = self.x <= ball.x and self.x + self.width >= ball.x + ball.radius;
+        const is_x_overlapping = self.x <= ball.x + ball.radius and self.x + self.width >= ball.x;
         const is_y_overlapping = self.y <= ball.y + ball.radius and self.y + self.height >= ball.y;
 
         return is_x_overlapping and is_y_overlapping;
@@ -79,8 +79,8 @@ const Brick = struct {
     y: i32,
 
     pub fn is_colliding(self: Brick, ball: Ball) bool {
-        const is_x_overlapping = self.x < ball.x and self.x + self.width > ball.x;
-        const is_y_overlapping = self.y < ball.y and self.y + self.height > ball.y;
+        const is_x_overlapping = self.x <= ball.x + ball.radius and self.x + self.width >= ball.x;
+        const is_y_overlapping = self.y <= ball.y + ball.radius and self.y + self.height >= ball.y;
 
         return is_x_overlapping and is_y_overlapping;
     }
@@ -97,13 +97,11 @@ fn is_quit(event: *c.SDL_Event) bool {
 fn handle_paddle_keyboard_events(keyboard: [*c]const u8, paddle: *Paddle) void {
     if (keyboard[c.SDL_SCANCODE_A] != 0) {
         paddle.update_position(-paddle.speed);
-        print("Paddle after: {any}\n", .{paddle});
         return;
     }
 
     if (keyboard[c.SDL_SCANCODE_D] != 0) {
         paddle.update_position(paddle.speed);
-        print("Paddle after: {any}\n", .{paddle});
         return;
     }
 }
@@ -179,8 +177,6 @@ pub fn main() !void {
 
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         _ = c.SDL_RenderClear(renderer);
-
-        // TODO: Refactor and rewrite these drawing functions to accept and render any game object (https://linear.app/rrafael/issue/ZIG-20/refactor-game-objects-paddle-ball-brick-to-be-the-same-enum)
 
         // NOTE: Draw paddle
         _ = c.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
