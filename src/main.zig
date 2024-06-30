@@ -180,6 +180,8 @@ pub fn main() !void {
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         _ = c.SDL_RenderClear(renderer);
 
+        // TODO: Refactor and rewrite these drawing functions to accept and render any game object (https://linear.app/rrafael/issue/ZIG-20/refactor-game-objects-paddle-ball-brick-to-be-the-same-enum)
+
         // NOTE: Draw paddle
         _ = c.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         _ = c.SDL_RenderFillRect(renderer, &paddle.to_rect());
